@@ -16,17 +16,66 @@
 
 package org.gradle.vcs.internal;
 
+import org.gradle.cache.CacheRepository;
+import org.gradle.cache.FileLockManager;
+import org.gradle.cache.PersistentCache;
 import org.gradle.vcs.VersionControlSpec;
 import org.gradle.vcs.VersionControlSystem;
+import org.gradle.vcs.VersionRef;
+import org.gradle.vcs.git.GitVersionControlSpec;
 import org.gradle.vcs.git.internal.GitVersionControlSystem;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static org.gradle.cache.internal.filelock.LockOptionsBuilder.mode;
+
 public class DefaultVersionControlSystemFactory implements VersionControlSystemFactory {
+    private final CacheRepository cacheRepository;
+    private final Map<Class<? extends VersionControlSpec>, VersionControlSystem> versionControlSystems;
+
+    DefaultVersionControlSystemFactory(CacheRepository cacheRepository) {
+        this.cacheRepository = cacheRepository;
+        // TODO: Move this map to a registry and inject the registry.
+        this.versionControlSystems = new HashMap<Class<? extends VersionControlSpec>, VersionControlSystem>();
+        versionControlSystems.put(DirectoryRepository.class, new SimpleVersionControlSystem());
+        versionControlSystems.put(GitVersionControlSpec.class, new GitVersionControlSystem());
+    }
+
     @Override
     public VersionControlSystem create(VersionControlSpec spec) {
-        // TODO: Register these mappings somewhere
-        if (spec instanceof DirectoryRepository) {
-            return new SimpleVersionControlSystem();
+        return new ThreadSafeVersionControlSystem(versionControlSystems.get(spec.getClass()), cacheRepository);
+    }
+
+    private static final class ThreadSafeVersionControlSystem implements VersionControlSystem {
+        private final VersionControlSystem delegate;
+        private final CacheRepository cacheRepository;
+
+        private ThreadSafeVersionControlSystem(VersionControlSystem delegate, CacheRepository cacheRepository) {
+            this.delegate = delegate;
+            this.cacheRepository = cacheRepository;
         }
-        return new GitVersionControlSystem();
+
+        @Override
+        public Set<VersionRef> getAvailableVersions(VersionControlSpec spec) {
+            return delegate.getAvailableVersions(spec);
+        }
+
+        @Override
+        public void populate(final File workingDir, final VersionRef ref, final VersionControlSpec spec) {
+            PersistentCache cache = cacheRepository
+                .cache(workingDir)
+                .withLockOptions(mode(FileLockManager.LockMode.Exclusive))
+                .open();
+            cache.useCache(new Runnable() {
+                @Override
+                public void run() {
+                    delegate.populate(workingDir, ref, spec);
+                }
+            });
+            cache.close();
+        }
     }
 }
