@@ -23,7 +23,7 @@ import org.gradle.tooling.model.Element
 import org.junit.Rule
 import spock.lang.Specification
 
-public class AutoTestedSamplesToolingApiTest extends Specification {
+class AutoTestedSamplesToolingApiTest extends Specification {
 
     @Rule public final TestNameTestDirectoryProvider temp = new TestNameTestDirectoryProvider()
 
@@ -31,8 +31,9 @@ public class AutoTestedSamplesToolingApiTest extends Specification {
         expect:
 
         def util = new AutoTestedSamplesUtil()
-        util.findSamples("subprojects/tooling-api/src/main") { file, sample, tagSuffix ->
-            println "Found sample: ${sample.split("\n")[0]} (...) in $file"
+        util.findSamples("subprojects/tooling-api/src/main") { File file, AutoTestedSamplesUtil.ExtractedSample sample ->
+            def text = sample.text
+            println "Found sample: ${text.split("\n")[0]} (...) in $file"
             def javaSource = """
 //some typical imports
 import org.gradle.tooling.*;
@@ -43,7 +44,7 @@ import java.io.*;
 
 public class Sample {
   public static void main(String ... args) {
-    $sample
+    $text
   }
 }
 """
@@ -90,9 +91,9 @@ public class Sample {
             diagnosticListener,
             null,
             null,
-            input).call();
+            input).call()
 
-        fileManager.close();
+        fileManager.close()
     }
 
     String normalize(String input) {

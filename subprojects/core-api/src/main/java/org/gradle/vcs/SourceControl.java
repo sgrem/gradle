@@ -21,6 +21,19 @@ import org.gradle.api.Incubating;
 
 /**
  * Configuration related to source dependencies.
+ * <pre class="autoTested">
+ * // Configuring VCS mapping
+ * // file: settings.gradle
+ * sourceControl {
+ *    vcsMappings {
+ *        withModule('org.gradle:tooling-api') {
+ *            from vcs(GitVersionControlSpec) {
+ *                url = uri("https://github.com/gradle/gradle")
+ *            }
+ *        }
+ *    }
+ * }
+ * </pre>
  *
  * @since 4.3
  */

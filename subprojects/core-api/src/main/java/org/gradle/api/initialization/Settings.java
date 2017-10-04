@@ -90,7 +90,10 @@ public interface Settings extends PluginAware {
      *
      * <p>Some common examples of using the project path are:</p>
      *
-     * <pre class='autoTestedSettings'>
+     * <pre class='autoTested'>
+     *   // Configuring a multi-project build
+     *   // file: settings.gradle
+     *
      *   // include two projects, 'foo' and 'foo:bar'
      *   // directories are inferred by replacing ':' with '/'
      *   include 'foo:bar'

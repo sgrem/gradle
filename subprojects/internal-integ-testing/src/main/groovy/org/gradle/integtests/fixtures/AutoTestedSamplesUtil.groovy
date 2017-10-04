@@ -20,8 +20,24 @@ import org.gradle.internal.SystemProperties
 
 class AutoTestedSamplesUtil {
 
+    static class ExtractedSample {
+        String title
+        String text
+        String fileName
+
+        boolean isSettings() {
+            fileName.startsWith("settings")
+        }
+
+        String toString() {
+            return "$title ($fileName)"
+        }
+    }
+
     String includes = '**/*.groovy **/*.java'
 
+    // TODO: Should add some validation that we're getting a useful sample
+    // e.g., tooling api expects to get Java sources, most everything else expects build.gradle contents
     void findSamples(String dir, Closure runner) {
         def sources = findDir(dir)
         def ant = new AntBuilder()
@@ -58,8 +74,11 @@ I tried looking for a root folder here: $candidates
             sample = sample.replace('&gt;', '>')
             sample = sample.replace('&amp;', '&')
             sample = sample.replaceAll(/\{@literal ([^}]+)}/, '$1')
+
+            def title = sample.split('\n')[0].replaceAll('/', '')
+            def fileName = extractFileName(sample)
             try {
-                runner.call(file, sample, tagSuffix)
+                runner.call(file, new ExtractedSample(title: title, text: sample, fileName: fileName))
             } catch (Exception e) {
                 throw new RuntimeException("""
 *****
@@ -72,5 +91,13 @@ $sample
 """, e)
             }
         }
+    }
+
+    private String extractFileName(String sample) {
+        def possibleFileName = sample.split('\n').find { it.contains("file:") }
+        if (possibleFileName) {
+            return possibleFileName.split(" ").last()
+        }
+        return "build.gradle"
     }
 }
