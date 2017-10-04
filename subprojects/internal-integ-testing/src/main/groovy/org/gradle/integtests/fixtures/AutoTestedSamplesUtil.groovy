@@ -66,9 +66,8 @@ I tried looking for a root folder here: $candidates
     }
 
     void runSamplesFromFile(File file, Closure runner) {
-        file.text.eachMatch(/(?ms).*?<pre class=['|"]autoTested(.*?)['|"].*?>(.*?)<\/pre>(.*?)/) {
-            def tagSuffix = it[1]
-            def sample = it[2]
+        file.text.eachMatch(/(?ms).*?<pre class=['|"]autoTested['|"].*?>(.*?)<\/pre>(.*?)/) {
+            def sample = it[1]
             sample = sample.replaceAll(/(?m)^\s*?\*/, '')
             sample = sample.replace('&lt;', '<')
             sample = sample.replace('&gt;', '>')
@@ -94,7 +93,7 @@ $sample
     }
 
     private String extractFileName(String sample) {
-        def possibleFileName = sample.split('\n').find { it.contains("file:") }
+        def possibleFileName = sample.split('\n').find { it.trim().startsWith("//") && it.contains("file:") }
         if (possibleFileName) {
             return possibleFileName.split(" ").last()
         }
