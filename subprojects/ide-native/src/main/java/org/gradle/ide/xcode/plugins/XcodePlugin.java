@@ -67,7 +67,7 @@ import org.gradle.language.swift.plugins.SwiftLibraryPlugin;
 import org.gradle.language.swift.tasks.CreateSwiftBundle;
 import org.gradle.nativeplatform.tasks.AbstractLinkTask;
 import org.gradle.nativeplatform.test.xctest.SwiftXCTestSuite;
-import org.gradle.nativeplatform.test.xctest.plugins.XCTestConventionPlugin;
+import org.gradle.nativeplatform.test.xctest.plugins.XcodeXCTestConventionPlugin;
 import org.gradle.plugins.ide.internal.IdePlugin;
 import org.gradle.util.CollectionUtils;
 import org.gradle.util.GUtil;
@@ -204,9 +204,9 @@ public class XcodePlugin extends IdePlugin {
             }
         });
 
-        project.getPlugins().withType(XCTestConventionPlugin.class, new Action<XCTestConventionPlugin>() {
+        project.getPlugins().withType(XcodeXCTestConventionPlugin.class, new Action<XcodeXCTestConventionPlugin>() {
             @Override
-            public void execute(XCTestConventionPlugin plugin) {
+            public void execute(XcodeXCTestConventionPlugin plugin) {
                 configureXcodeForXCTest(project, PBXTarget.ProductType.UNIT_TEST);
             }
         });

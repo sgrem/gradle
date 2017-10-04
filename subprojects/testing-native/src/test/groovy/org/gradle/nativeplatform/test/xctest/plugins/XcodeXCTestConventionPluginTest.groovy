@@ -17,10 +17,11 @@
 package org.gradle.nativeplatform.test.xctest.plugins
 
 import org.gradle.internal.os.OperatingSystem
+import org.gradle.language.swift.plugins.SwiftLibraryPlugin
 import org.gradle.language.swift.tasks.CreateSwiftBundle
 import org.gradle.language.swift.tasks.SwiftCompile
 import org.gradle.nativeplatform.tasks.LinkMachOBundle
-import org.gradle.nativeplatform.test.xctest.SwiftXCTestSuite
+import org.gradle.nativeplatform.test.xctest.SwiftXcodeXCTestSuite
 import org.gradle.nativeplatform.test.xctest.tasks.XcTest
 import org.gradle.test.fixtures.file.TestNameTestDirectoryProvider
 import org.gradle.testfixtures.ProjectBuilder
@@ -30,7 +31,7 @@ import org.junit.Rule
 import spock.lang.Specification
 
 @Requires(TestPrecondition.MAC_OS_X)
-class XCTestConventionPluginTest extends Specification {
+class XcodeXCTestConventionPluginTest extends Specification {
     @Rule
     TestNameTestDirectoryProvider tmpDir = new TestNameTestDirectoryProvider()
     def projectDir = tmpDir.createDir("project")
@@ -38,19 +39,33 @@ class XCTestConventionPluginTest extends Specification {
 
     def "adds extension with convention for source layout"() {
         given:
+        project.pluginManager.apply(SwiftLibraryPlugin)
         def src = projectDir.file("src/test/swift/test.swift").createFile()
 
         when:
-        project.pluginManager.apply(XCTestConventionPlugin)
+        project.pluginManager.apply(XcodeXCTestConventionPlugin)
 
         then:
-        project.xctest instanceof SwiftXCTestSuite
+        project.xctest instanceof SwiftXcodeXCTestSuite
         project.xctest.swiftSource.files == [src] as Set
     }
 
     def "registers a component for the test suite"() {
+        given:
+        project.pluginManager.apply(SwiftLibraryPlugin)
+
         when:
-        project.pluginManager.apply(XCTestConventionPlugin)
+        project.pluginManager.apply(XcodeXCTestConventionPlugin)
+
+        then:
+        project.components.test == project.xctest
+        project.components.testBundle == project.xctest.bundle
+    }
+
+    def "registers a component for the test suite when plugin is applied before"() {
+        when:
+        project.pluginManager.apply(XcodeXCTestConventionPlugin)
+        project.pluginManager.apply(SwiftLibraryPlugin)
 
         then:
         project.components.test == project.xctest
@@ -59,10 +74,11 @@ class XCTestConventionPluginTest extends Specification {
 
     def "adds compile, link and install tasks"() {
         given:
+        project.pluginManager.apply(SwiftLibraryPlugin)
         def src = projectDir.file("src/test/swift/test.swift").createFile()
 
         when:
-        project.pluginManager.apply(XCTestConventionPlugin)
+        project.pluginManager.apply(XcodeXCTestConventionPlugin)
 
         then:
         def compileSwift = project.tasks.compileTestSwift
@@ -90,8 +106,11 @@ class XCTestConventionPluginTest extends Specification {
     }
 
     def "output locations reflects changes to buildDir"() {
+        given:
+        project.pluginManager.apply(SwiftLibraryPlugin)
+
         when:
-        project.pluginManager.apply(XCTestConventionPlugin)
+        project.pluginManager.apply(XcodeXCTestConventionPlugin)
         project.buildDir = project.file("output")
 
         then:

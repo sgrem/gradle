@@ -20,20 +20,22 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.internal.file.DefaultProjectLayout
 import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.internal.provider.DefaultProviderFactory
+import org.gradle.language.swift.SwiftComponent
 import org.gradle.test.fixtures.file.TestNameTestDirectoryProvider
 import org.gradle.util.TestUtil
 import org.junit.Rule
 import spock.lang.Specification
 import spock.lang.Subject
 
-@Subject(DefaultSwiftXCTestSuite)
-class DefaultSwiftXCTestSuiteTest extends Specification {
+@Subject(DefaultSwiftXcodeXCTestSuite)
+class DefaultSwiftXcodeXCTestSuiteTest extends Specification {
     @Rule
     TestNameTestDirectoryProvider tmpDir = new TestNameTestDirectoryProvider()
     def fileOperations = TestFiles.fileOperations(tmpDir.testDirectory)
     def providerFactory = new DefaultProviderFactory()
     def projectLayout = new DefaultProjectLayout(tmpDir.testDirectory, TestFiles.resolver(tmpDir.testDirectory))
-    def testSuite = new DefaultSwiftXCTestSuite("test", TestUtil.objectFactory(), fileOperations, providerFactory, Stub(ConfigurationContainer), projectLayout)
+    def testedComponent = Mock(SwiftComponent)
+    def testSuite = new DefaultSwiftXcodeXCTestSuite("test", TestUtil.objectFactory(), fileOperations, providerFactory, Stub(ConfigurationContainer), projectLayout, testedComponent)
 
     def "has a bundle"() {
         expect:

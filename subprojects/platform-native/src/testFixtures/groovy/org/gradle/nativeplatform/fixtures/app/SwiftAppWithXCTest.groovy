@@ -16,21 +16,10 @@
 
 package org.gradle.nativeplatform.fixtures.app
 
-import org.gradle.integtests.fixtures.SourceFile
-import org.gradle.test.fixtures.file.TestFile
-
-class SwiftAppWithXCTest extends XCTestSourceElement implements AppElement {
-    final app = new SwiftApp()
-    final test = new SwiftAppTest(app.greeter, app.sum, app.multiply)
-
-    List<SourceFile> files = app.files + test.files
-    List<XCTestSourceFileElement> testSuites = test.testSuites
+class SwiftAppWithXCTest extends MainWithXCTestSourceElement implements AppElement {
+    private final app = new SwiftApp()
+    final SwiftSourceElement main = app.asModule("App")
+    final XCTestSourceElement test = new SwiftAppTest(app.greeter, app.sum, app.multiply).asModule("AppTest").withInfoPlist()
 
     String expectedOutput = app.expectedOutput
-
-    @Override
-    void writeToProject(TestFile projectDir) {
-        app.writeToProject(projectDir)
-        test.writeToProject(projectDir)
-    }
 }
